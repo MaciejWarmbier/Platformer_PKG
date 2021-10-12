@@ -90,5 +90,15 @@ public class PlayerControllerLevel1 : MonoBehaviour
             Debug.Log("Score = " +score);
             other.gameObject.SetActive(false);
         }
+
+        if(other.CompareTag("End")){
+            Debug.Log("YOU WON!!!!");
+        }
+
+        if(other.CompareTag("Ametyst")){
+            score+=10;
+            Debug.Log("Score = " +score);
+            other.gameObject.SetActive(false);
+        }
     }
 }
