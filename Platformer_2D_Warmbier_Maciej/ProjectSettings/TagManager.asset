@@ -7,6 +7,9 @@ TagManager:
   - Cristal
   - End
   - Ametyst
+  - Enemy
+  - Key
+  - Heart
   layers:
   - Default
   - TransparentFX

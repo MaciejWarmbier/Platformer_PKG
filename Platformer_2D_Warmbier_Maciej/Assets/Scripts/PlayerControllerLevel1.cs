@@ -8,42 +8,32 @@ public class PlayerControllerLevel1 : MonoBehaviour
     [SerializeField] float jumpForce = 2f;
     [SerializeField] LayerMask groundLayer;
     [SerializeField] Animator animator;
-    int score = 0;
+    [SerializeField] GameObject respawn;
+    [SerializeField] float killOffset;
+    [SerializeField] int maxKeyNumber;
     bool isWalking = false;
     bool isGrounded = true;
     bool isFalling = false;
     bool isFacingRight = true;
+    
     Rigidbody2D rb;
     
-    // Start is called before the first frame update
-    private void Awake() {
+        private void Awake() {
         rb = GetComponent<Rigidbody2D>();
     }
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
     void Update()
     {
+        if(GameManager.instance.currentGameState == GameState.GS_GAME)
+        {
         isWalking = false;
         isGrounded = IsGrounded();
         isFalling = IsFalling();
 
         if(Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)){
-            transform.Translate(Vector2.right * moveSpeed * Time.deltaTime);
-            if(!isFacingRight){
-                Flip();
-            }
-            isWalking= true;
+            MoveRight();
         }
         else if(Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)){
-            transform.Translate(Vector2.left * moveSpeed * Time.deltaTime);
-            if(isFacingRight){
-                Flip();
-            }
-            isWalking = true;
+            MoveLeft();
         }
 
         
@@ -53,6 +43,27 @@ public class PlayerControllerLevel1 : MonoBehaviour
         animator.SetBool("isFalling", isFalling);
         animator.SetBool("isWalking", isWalking);
         animator.SetBool("isGrounded",isGrounded);
+        }
+    }
+
+    void MoveLeft()
+    {
+        transform.Translate(Vector2.left * moveSpeed * Time.deltaTime);
+        if (isFacingRight)
+        {
+            Flip();
+        }
+        isWalking = true;
+    }
+
+    void MoveRight()
+    {
+        transform.Translate(Vector2.right * moveSpeed * Time.deltaTime);
+        if (!isFacingRight)
+        {
+            Flip();
+        }
+        isWalking = true;
     }
 
     void Jump(){
@@ -60,17 +71,18 @@ public class PlayerControllerLevel1 : MonoBehaviour
         
         if(isGrounded){
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-            Debug.Log("Jumping");
+            
         }
     }
 
     bool IsGrounded(){
+        Debug.DrawRay(transform.position, Vector2.down*0.2f);
         return Physics2D.Raycast(transform.position, Vector2.down, 0.2f, groundLayer.value);
     }
 
     bool IsFalling(){
         if(rb.velocity.y < 0 && !isGrounded){
-            Debug.Log("Falling");
+            
             return true;
             
         }
@@ -86,19 +98,59 @@ public class PlayerControllerLevel1 : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other) {
         if(other.CompareTag("Cristal")){
-            score++;
-            Debug.Log("Score = " +score);
+            GameManager.instance.AddCoins(1);
             other.gameObject.SetActive(false);
         }
 
         if(other.CompareTag("End")){
-            Debug.Log("YOU WON!!!!");
+            //if(keys == maxKeyNumber)
+           // {
+            //    Debug.Log("YOU WON!!!!");
+           // }
+            //else
+           // {
+            //    Debug.Log("You need more keys");
+            //}
+            
         }
 
-        if(other.CompareTag("Ametyst")){
-            score+=10;
-            Debug.Log("Score = " +score);
+        if(other.CompareTag("Key")){
+            GameManager.instance.AddKeys();
             other.gameObject.SetActive(false);
         }
+
+        if (other.CompareTag("Enemy"))
+        {
+            if (isOnEnemy(other)) {
+                GameManager.instance.AddEnemies();
+            }
+            else
+            {
+                GameManager.instance.DepleteHearts();
+                Respawn();
+            }
+        }
+
+        if (other.CompareTag("Heart"))
+        {
+            GameManager.instance.AddHearts();
+            other.gameObject.SetActive(false);
+
+        }
+    }
+
+    bool isOnEnemy(Collider2D enemy)
+    {
+        
+        if(enemy.transform.position.y+ killOffset < transform.position.y)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    void Respawn()
+    {
+        transform.position = respawn.transform.position;
     }
 }
